@@ -10,6 +10,7 @@ import Loader from "../components/Loader";
 import Navbar from "../components/Navbar";
 import { useSelector } from "react-redux";
 import Footer from "../components/Footer"
+import EmptyState from "../components/EmptyState";
 import { apiUrl, assetUrl } from "../config/api";
 
 const ListingDetails = () => {
@@ -20,26 +21,29 @@ const ListingDetails = () => {
 
   useEffect(() => {
     const getListingDetails = async () => {
+      setLoading(true);
       try {
-        const response = await fetch(
-          apiUrl(`/properties/${listingId}`),
-          {
-            method: "GET",
-          }
-        );
+        const response = await fetch(apiUrl(`/properties/${listingId}`), {
+          method: "GET",
+        });
+
+        if (!response.ok) {
+          setListing(null);
+          return;
+        }
 
         const data = await response.json();
         setListing(data);
-        setLoading(false);
       } catch (err) {
         console.log("Fetch Listing Details Failed", err.message);
+        setListing(null);
+      } finally {
+        setLoading(false);
       }
     };
 
     getListingDetails();
   }, [listingId]);
-
-  console.log(listing)
 
 
   /* BOOKING CALENDAR */
@@ -92,12 +96,30 @@ const ListingDetails = () => {
     }
   }
 
-  return loading ? (
-    <Loader />
-  ) : (
+  if (loading) return <Loader />;
+
+  if (!listing) {
+    return (
+      <>
+        <Navbar />
+        <div className="list-page">
+          <EmptyState
+            image="/assets/cave_cat.jpg"
+            title="Listing not found"
+            message="This property may have been removed or the link is incorrect."
+            actionLabel="Browse all stays"
+            actionTo="/"
+          />
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  return (
     <>
       <Navbar />
-      
+
       <div className="listing-details">
         <div className="title">
           <h1>{listing.title}</h1>

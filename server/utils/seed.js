@@ -134,7 +134,7 @@ const seed = async () => {
     listingPhotoPaths: listing1Photos.slice(0, 3),
   });
 
-  guest.wishList = [windmillCottage._id];
+  guest.wishList = [windmillCottage._id, beachHouse._id];
   await guest.save();
 
   await Booking.create({

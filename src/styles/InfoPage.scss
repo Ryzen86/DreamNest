@@ -1,0 +1,53 @@
+@import "./variables.scss";
+@import "./breakpoints.scss";
+
+.info-page_hero {
+  min-height: 280px;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+
+  h1 {
+    color: white;
+    font-size: clamp(32px, 5vw, 48px);
+    text-align: center;
+  }
+}
+
+.info-page_content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 48px 24px 100px;
+  color: #333;
+  line-height: 1.7;
+
+  h2 {
+    color: $blue;
+    margin: 32px 0 12px;
+    font-size: 22px;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  p {
+    margin-bottom: 16px;
+  }
+
+  ul {
+    margin: 0 0 16px 24px;
+  }
+
+  img.info-page_inline {
+    width: 100%;
+    max-width: 560px;
+    border-radius: 12px;
+    margin: 24px auto;
+    display: block;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
+}

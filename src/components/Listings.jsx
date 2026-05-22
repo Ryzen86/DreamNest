@@ -3,6 +3,7 @@ import { categories } from "../data";
 import "../styles/Listings.scss";
 import ListingCard from "./ListingCard";
 import Loader from "./Loader";
+import EmptyState from "./EmptyState";
 import { useDispatch, useSelector } from "react-redux";
 import { setListings } from "../redux/state";
 import { apiUrl } from "../config/api";
@@ -69,7 +70,21 @@ const Listings = () => {
       {loading ? (
         <Loader />
       ) : error ? (
-        <p className="listings_error">{error}</p>
+        <EmptyState
+          image="/assets/slide.jpg"
+          title="Could not load listings"
+          message={error}
+          actionLabel="Refresh page"
+          actionTo="/"
+        />
+      ) : listings.length === 0 ? (
+        <EmptyState
+          image="/assets/beach_cat.jpg"
+          title="No listings available"
+          message="Start the API server and run npm run seed in the server folder, then refresh."
+          actionLabel="Try again"
+          actionTo="/"
+        />
       ) : (
         <div className="listings">
           {listings.map(
@@ -83,7 +98,7 @@ const Listings = () => {
               category,
               type,
               price,
-              booking=false
+              booking = false,
             }) => (
               <ListingCard
                 key={_id}

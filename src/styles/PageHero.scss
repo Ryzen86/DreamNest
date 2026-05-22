@@ -1,0 +1,26 @@
+.page-hero {
+  width: 100%;
+  min-height: 220px;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 48px 24px;
+  color: white;
+
+  h1 {
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 700;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+
+  p {
+    margin-top: 12px;
+    font-size: 18px;
+    max-width: 600px;
+    opacity: 0.95;
+  }
+}

@@ -271,3 +271,8 @@ export const facilities = [
     icon: <MdPets />
   }
 ];
+
+export const getCategoryImage = (label) => {
+  const match = categories.find((c) => c.label === label);
+  return match?.img || "/assets/slide.jpg";
+};

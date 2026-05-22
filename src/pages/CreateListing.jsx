@@ -11,6 +11,7 @@ import { BiTrash } from "react-icons/bi";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Footer from "../components/Footer"
+import PageHero from "../components/PageHero";
 import { apiUrl } from "../config/api";
 
 const CreateListing = () => {
@@ -155,9 +156,13 @@ const CreateListing = () => {
   return (
     <>
       <Navbar />
+      <PageHero
+        image="/assets/uploadPhoto.png"
+        title="Publish Your Place"
+        subtitle="Add photos, set your price, and welcome your first guests"
+      />
 
       <div className="create-listing">
-        <h1>Publish Your Place</h1>
         <form onSubmit={handlePost}>
           <div className="create-listing_step1">
             <h2>Step 1: Tell us about your place</h2>
