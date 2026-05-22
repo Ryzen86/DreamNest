@@ -14,28 +14,28 @@ const Listings = () => {
 
   const listings = useSelector((state) => state.listings);
 
-  const getFeedListings = async () => {
-    try {
-      const response = await fetch(
-        selectedCategory !== "All"
-          ? `http://localhost:3001/properties?category=${selectedCategory}`
-          : "http://localhost:3001/properties",
-        {
-          method: "GET",
-        }
-      );
-
-      const data = await response.json();
-      dispatch(setListings({ listings: data }));
-      setLoading(false);
-    } catch (err) {
-      console.log("Fetch Listings Failed", err.message);
-    }
-  };
-
   useEffect(() => {
+    const getFeedListings = async () => {
+      try {
+        const response = await fetch(
+          selectedCategory !== "All"
+            ? `http://localhost:3001/properties?category=${selectedCategory}`
+            : "http://localhost:3001/properties",
+          {
+            method: "GET",
+          }
+        );
+
+        const data = await response.json();
+        dispatch(setListings({ listings: data }));
+        setLoading(false);
+      } catch (err) {
+        console.log("Fetch Listings Failed", err.message);
+      }
+    };
+
     getFeedListings();
-  }, [selectedCategory]);
+  }, [selectedCategory, dispatch]);
 
   return (
     <>

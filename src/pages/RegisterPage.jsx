@@ -25,7 +25,7 @@ const RegisterPage = () => {
 
   useEffect(() => {
     setPasswordMatch(formData.password === formData.confirmPassword || formData.confirmPassword === "")
-  })
+  }, [formData.password, formData.confirmPassword])
 
   const navigate = useNavigate()
 
@@ -109,14 +109,14 @@ const RegisterPage = () => {
             required
           />
           <label htmlFor="image">
-            <img src="/assets/addImage.png" alt="add profile photo" />
+            <img src="/assets/addImage.png" alt="Add profile" />
             <p>Upload Your Photo</p>
           </label>
 
           {formData.profileImage && (
             <img
               src={URL.createObjectURL(formData.profileImage)}
-              alt="profile photo"
+              alt="Profile preview"
               style={{ maxWidth: "80px" }}
             />
           )}

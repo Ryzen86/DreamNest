@@ -14,23 +14,25 @@ const PropertyList = () => {
   console.log(user)
 
   const dispatch = useDispatch()
-  const getPropertyList = async () => {
-    try {
-      const response = await fetch(`http://localhost:3001/users/${user._id}/properties`, {
-        method: "GET"
-      })
-      const data = await response.json()
-      console.log(data)
-      dispatch(setPropertyList(data))
-      setLoading(false)
-    } catch (err) {
-      console.log("Fetch all properties failed", err.message)
-    }
-  }
-
   useEffect(() => {
+    if (!user?._id) return;
+
+    const getPropertyList = async () => {
+      try {
+        const response = await fetch(`http://localhost:3001/users/${user._id}/properties`, {
+          method: "GET"
+        })
+        const data = await response.json()
+        console.log(data)
+        dispatch(setPropertyList(data))
+        setLoading(false)
+      } catch (err) {
+        console.log("Fetch all properties failed", err.message)
+      }
+    }
+
     getPropertyList()
-  }, [])
+  }, [user?._id, dispatch])
 
   return loading ? <Loader /> : (
     <>

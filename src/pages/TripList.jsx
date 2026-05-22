@@ -14,26 +14,26 @@ const TripList = () => {
 
   const dispatch = useDispatch();
 
-  const getTripList = async () => {
-    try {
-      const response = await fetch(
-        `http://localhost:3001/users/${userId}/trips`,
-        {
-          method: "GET",
-        }
-      );
-
-      const data = await response.json();
-      dispatch(setTripList(data));
-      setLoading(false);
-    } catch (err) {
-      console.log("Fetch Trip List failed!", err.message);
-    }
-  };
-
   useEffect(() => {
+    const getTripList = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:3001/users/${userId}/trips`,
+          {
+            method: "GET",
+          }
+        );
+
+        const data = await response.json();
+        dispatch(setTripList(data));
+        setLoading(false);
+      } catch (err) {
+        console.log("Fetch Trip List failed!", err.message);
+      }
+    };
+
     getTripList();
- }, [getTripList]);
+  }, [userId, dispatch]);
 
   return loading ? (
     <Loader />

@@ -15,23 +15,23 @@ const SearchPage = () => {
 
   const dispatch = useDispatch()
 
-  const getSearchListings = async () => {
-    try {
-      const response = await fetch(`http://localhost:3001/properties/search/${search}`, {
-        method: "GET"
-      })
-
-      const data = await response.json()
-      dispatch(setListings({ listings: data }))
-      setLoading(false)
-    } catch (err) {
-      console.log("Fetch Search List failed!", err.message)
-    }
-  }
-
   useEffect(() => {
+    const getSearchListings = async () => {
+      try {
+        const response = await fetch(`http://localhost:3001/properties/search/${search}`, {
+          method: "GET"
+        })
+
+        const data = await response.json()
+        dispatch(setListings({ listings: data }))
+        setLoading(false)
+      } catch (err) {
+        console.log("Fetch Search List failed!", err.message)
+      }
+    }
+
     getSearchListings()
-  }, [search])
+  }, [search, dispatch])
   
   return loading ? <Loader /> : (
     <>

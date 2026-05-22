@@ -17,26 +17,26 @@ const ListingDetails = () => {
   const { listingId } = useParams();
   const [listing, setListing] = useState(null);
 
-  const getListingDetails = async () => {
-    try {
-      const response = await fetch(
-        `http://localhost:3001/properties/${listingId}`,
-        {
-          method: "GET",
-        }
-      );
-
-      const data = await response.json();
-      setListing(data);
-      setLoading(false);
-    } catch (err) {
-      console.log("Fetch Listing Details Failed", err.message);
-    }
-  };
-
   useEffect(() => {
+    const getListingDetails = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:3001/properties/${listingId}`,
+          {
+            method: "GET",
+          }
+        );
+
+        const data = await response.json();
+        setListing(data);
+        setLoading(false);
+      } catch (err) {
+        console.log("Fetch Listing Details Failed", err.message);
+      }
+    };
+
     getListingDetails();
-  }, []);
+  }, [listingId]);
 
   console.log(listing)
 
@@ -104,10 +104,11 @@ const ListingDetails = () => {
         </div>
 
         <div className="photos">
-          {listing.listingPhotoPaths?.map((item) => (
+          {listing.listingPhotoPaths?.map((item, index) => (
             <img
+              key={index}
               src={`http://localhost:3001/${item.replace("public", "")}`}
-              alt="listing photo"
+              alt={`Listing ${index + 1}`}
             />
           ))}
         </div>
@@ -128,6 +129,7 @@ const ListingDetails = () => {
               "public",
               ""
             )}`}
+            alt="Host profile"
           />
           <h3>
             Hosted by {listing.creator.firstName} {listing.creator.lastName}
