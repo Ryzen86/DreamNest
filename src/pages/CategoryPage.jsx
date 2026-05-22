@@ -7,29 +7,32 @@ import { setListings } from "../redux/state";
 import Loader from "../components/Loader";
 import ListingCard from "../components/ListingCard";
 import Footer from "../components/Footer"
+import { apiUrl } from "../config/api";
 
 const CategoryPage = () => {
   const [loading, setLoading] = useState(true);
   const { category } = useParams()
 
   const dispatch = useDispatch()
-  const listings = useSelector((state) => state.listings);
+  const listings = useSelector((state) => state.listings) || [];
 
   useEffect(() => {
     const getFeedListings = async () => {
       try {
         const response = await fetch(
-          `http://localhost:3001/properties?category=${category}`,
+          apiUrl(`/properties?category=${category}`),
           {
             method: "GET",
           }
         );
 
         const data = await response.json();
-        dispatch(setListings({ listings: data }));
-        setLoading(false);
+        dispatch(setListings({ listings: Array.isArray(data) ? data : [] }));
       } catch (err) {
         console.log("Fetch Listings Failed", err.message);
+        dispatch(setListings({ listings: [] }));
+      } finally {
+        setLoading(false);
       }
     };
 

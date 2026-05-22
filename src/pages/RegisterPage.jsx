@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom"
 import "../styles/Register.scss";
+import { apiUrl } from "../config/api";
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -28,9 +29,11 @@ const RegisterPage = () => {
   }, [formData.password, formData.confirmPassword])
 
   const navigate = useNavigate()
+  const [error, setError] = useState("")
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setError("")
 
     try {
       const register_form = new FormData()
@@ -39,16 +42,22 @@ const RegisterPage = () => {
         register_form.append(key, formData[key])
       }
 
-      const response = await fetch("http://localhost:3001/auth/register", {
+      const response = await fetch(apiUrl("/auth/register"), {
         method: "POST",
         body: register_form
       })
 
       if (response.ok) {
         navigate("/login")
+      } else {
+        const errBody = await response.json().catch(() => ({}))
+        setError(errBody.message || "Registration failed.")
       }
     } catch (err) {
       console.log("Registration failed", err.message)
+      setError(
+        "Cannot reach the API server. Deploy the backend and set REACT_APP_API_URL in Vercel."
+      )
     }
   }
 
@@ -98,6 +107,7 @@ const RegisterPage = () => {
           {!passwordMatch && (
             <p style={{ color: "red" }}>Passwords are not matched!</p>
           )}
+          {error && <p style={{ color: "#ff6b6b" }}>{error}</p>}
 
           <input
             id="image"

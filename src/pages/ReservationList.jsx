@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setReservationList } from "../redux/state";
 import ListingCard from "../components/ListingCard";
 import Footer from "../components/Footer"
+import { apiUrl } from "../config/api";
 
 const ReservationList = () => {
   const [loading, setLoading] = useState(true);
@@ -18,7 +19,7 @@ const ReservationList = () => {
     const getReservationList = async () => {
       try {
         const response = await fetch(
-          `http://localhost:3001/users/${userId}/reservations`,
+          apiUrl(`/users/${userId}/reservations`),
           {
             method: "GET",
           }
@@ -45,7 +46,7 @@ const ReservationList = () => {
         {reservationList?.map(({ listingId, hostId, startDate, endDate, totalPrice, booking=true }) => (
           <ListingCard
             listingId={listingId._id}
-            creator={hostId._id}
+            creator={hostId}
             listingPhotoPaths={listingId.listingPhotoPaths}
             city={listingId.city}
             province={listingId.province}

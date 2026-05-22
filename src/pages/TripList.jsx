@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setTripList } from "../redux/state";
 import ListingCard from "../components/ListingCard";
 import Footer from "../components/Footer"
+import { apiUrl } from "../config/api";
 
 const TripList = () => {
   const [loading, setLoading] = useState(true);
@@ -18,7 +19,7 @@ const TripList = () => {
     const getTripList = async () => {
       try {
         const response = await fetch(
-          `http://localhost:3001/users/${userId}/trips`,
+          apiUrl(`/users/${userId}/trips`),
           {
             method: "GET",
           }
@@ -45,7 +46,7 @@ const TripList = () => {
         {tripList?.map(({ listingId, hostId, startDate, endDate, totalPrice, booking=true }) => (
           <ListingCard
             listingId={listingId._id}
-            creator={hostId._id}
+            creator={hostId}
             listingPhotoPaths={listingId.listingPhotoPaths}
             city={listingId.city}
             province={listingId.province}

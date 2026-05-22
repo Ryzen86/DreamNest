@@ -1,6 +1,13 @@
 @import "./variables.scss";
 @import "./breakpoints.scss";
 
+.listings_error {
+  padding: 24px;
+  text-align: center;
+  color: $darkgrey;
+  font-size: 16px;
+}
+
 .category-list {
   padding: 50px 80px;
   display: flex;

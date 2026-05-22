@@ -10,6 +10,7 @@ import Loader from "../components/Loader";
 import Navbar from "../components/Navbar";
 import { useSelector } from "react-redux";
 import Footer from "../components/Footer"
+import { apiUrl, assetUrl } from "../config/api";
 
 const ListingDetails = () => {
   const [loading, setLoading] = useState(true);
@@ -21,7 +22,7 @@ const ListingDetails = () => {
     const getListingDetails = async () => {
       try {
         const response = await fetch(
-          `http://localhost:3001/properties/${listingId}`,
+          apiUrl(`/properties/${listingId}`),
           {
             method: "GET",
           }
@@ -75,7 +76,7 @@ const ListingDetails = () => {
         totalPrice: listing.price * dayCount,
       }
 
-      const response = await fetch("http://localhost:3001/bookings/create", {
+      const response = await fetch(apiUrl("/bookings/create"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -107,7 +108,7 @@ const ListingDetails = () => {
           {listing.listingPhotoPaths?.map((item, index) => (
             <img
               key={index}
-              src={`http://localhost:3001/${item.replace("public", "")}`}
+              src={assetUrl(item)}
               alt={`Listing ${index + 1}`}
             />
           ))}
@@ -125,10 +126,7 @@ const ListingDetails = () => {
 
         <div className="profile">
           <img
-            src={`http://localhost:3001/${listing.creator.profileImagePath.replace(
-              "public",
-              ""
-            )}`}
+            src={assetUrl(listing.creator.profileImagePath)}
             alt="Host profile"
           />
           <h3>
@@ -149,7 +147,14 @@ const ListingDetails = () => {
           <div>
             <h2>What this place offers?</h2>
             <div className="amenities">
-              {listing.amenities[0].split(",").map((item, index) => (
+              {(Array.isArray(listing.amenities)
+                ? listing.amenities.length === 1 &&
+                  typeof listing.amenities[0] === "string" &&
+                  listing.amenities[0].includes(",")
+                  ? listing.amenities[0].split(",").map((s) => s.trim())
+                  : listing.amenities
+                : []
+              ).map((item, index) => (
                 <div className="facility" key={index}>
                   <div className="facility_icon">
                     {

@@ -7,26 +7,29 @@ import Loader from "../components/Loader"
 import Navbar from "../components/Navbar";
 import ListingCard from "../components/ListingCard";
 import Footer from "../components/Footer"
+import { apiUrl } from "../config/api";
 
 const SearchPage = () => {
   const [loading, setLoading] = useState(true)
   const { search } = useParams()
-  const listings = useSelector((state) => state.listings)
+  const listings = useSelector((state) => state.listings) || []
 
   const dispatch = useDispatch()
 
   useEffect(() => {
     const getSearchListings = async () => {
       try {
-        const response = await fetch(`http://localhost:3001/properties/search/${search}`, {
+        const response = await fetch(apiUrl(`/properties/search/${search}`), {
           method: "GET"
         })
 
         const data = await response.json()
-        dispatch(setListings({ listings: data }))
-        setLoading(false)
+        dispatch(setListings({ listings: Array.isArray(data) ? data : [] }))
       } catch (err) {
         console.log("Fetch Search List failed!", err.message)
+        dispatch(setListings({ listings: [] }))
+      } finally {
+        setLoading(false)
       }
     }
 

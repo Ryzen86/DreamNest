@@ -11,6 +11,7 @@ import { BiTrash } from "react-icons/bi";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Footer from "../components/Footer"
+import { apiUrl } from "../config/api";
 
 const CreateListing = () => {
   const [category, setCategory] = useState("");
@@ -93,9 +94,20 @@ const CreateListing = () => {
     });
   };
 
-  const creatorId = useSelector((state) => state.user._id);
-
+  const creatorId = useSelector((state) => state.user?._id);
   const navigate = useNavigate();
+
+  if (!creatorId) {
+    return (
+      <>
+        <Navbar />
+        <p style={{ padding: 40, textAlign: "center" }}>
+          Please <a href="/login">log in</a> to create a listing.
+        </p>
+        <Footer />
+      </>
+    );
+  }
 
   const handlePost = async (e) => {
     e.preventDefault();
@@ -128,7 +140,7 @@ const CreateListing = () => {
       });
 
       /* Send a POST request to server */
-      const response = await fetch("http://localhost:3001/properties/create", {
+      const response = await fetch(apiUrl("/properties/create"), {
         method: "POST",
         body: listingForm,
       });

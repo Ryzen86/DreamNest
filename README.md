@@ -1,70 +1,87 @@
-# Getting Started with Create React App
+# DreamNest — MERN Rental & Booking Platform
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Full-stack property rental platform: search listings, wishlists, bookings, and role-based access (user, host, admin).
 
-## Available Scripts
+## Stack
 
-In the project directory, you can run:
+| Layer | Tech |
+|-------|------|
+| **M**ongoDB | Database |
+| **E**xpress | REST API (`server/`) |
+| **R**eact | UI (Create React App) |
+| **N**ode.js | API runtime |
 
-### `npm start`
+## Quick start
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Prerequisites
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- [Node.js](https://nodejs.org/) 18+
+- [MongoDB](https://www.mongodb.com/try/download/community) running locally (or MongoDB Atlas URI in `server/.env`)
 
-### `npm test`
+### 1. Backend
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```powershell
+cd server
+npm install
+copy .env.example .env
+npm run seed
+npm run dev
+```
 
-### `npm run build`
+API: http://localhost:3001
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 2. Frontend (new terminal)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```powershell
+cd ..
+npm install
+npm start
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+App: http://localhost:3000
 
-### `npm run eject`
+### Demo accounts (after seed)
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+| Email | Password | Role |
+|-------|----------|------|
+| host@dreamnest.com | password123 | host |
+| guest@dreamnest.com | password123 | user |
+| admin@dreamnest.com | password123 | admin |
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Features
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+- JWT authentication (register / login)
+- Property listings with categories, search, and filters
+- Photo uploads (profile + listing images)
+- Wishlist
+- Booking / trips (guest) and reservations (host)
+- Roles: **user**, **host** (auto-assigned after first listing), **admin**
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Project structure
 
-## Learn More
+```
+DreamNest_Rental_Platform/
+├── server/          # Express API + MongoDB
+│   ├── models/
+│   ├── routes/
+│   ├── middleware/
+│   └── utils/seed.js
+├── src/             # React client
+└── public/assets/   # Static images (seeded to server)
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Production (Vercel + API host)
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+1. Deploy `server/` to Render, Railway, etc.
+2. Set `MONGO_URI`, `JWT_SECRET`, `CLIENT_URL` on the API host.
+3. On Vercel, set `REACT_APP_API_URL` to your API URL and redeploy.
 
-### Code Splitting
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for details.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Scripts
 
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+| Location | Command | Description |
+|----------|---------|-------------|
+| `server/` | `npm run dev` | API with nodemon |
+| `server/` | `npm run seed` | Reset DB + demo data |
+| root | `npm start` | React dev server |

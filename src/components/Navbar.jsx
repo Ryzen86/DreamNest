@@ -6,6 +6,7 @@ import { useSelector, useDispatch } from "react-redux";
 import "../styles/Navbar.scss";
 import { Link, useNavigate } from "react-router-dom";
 import { setLogout } from "../redux/state";
+import { assetUrl } from "../config/api";
 
 
 const Navbar = () => {
@@ -60,10 +61,7 @@ const Navbar = () => {
             <Person sx={{ color: variables.darkgrey }} />
           ) : (
             <img
-              src={`http://localhost:3001/${user.profileImagePath.replace(
-                "public",
-                ""
-              )}`}
+              src={assetUrl(user.profileImagePath)}
               alt="Profile"
               style={{ objectFit: "cover", borderRadius: "50%" }}
             />

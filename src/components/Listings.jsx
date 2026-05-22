@@ -5,32 +5,46 @@ import ListingCard from "./ListingCard";
 import Loader from "./Loader";
 import { useDispatch, useSelector } from "react-redux";
 import { setListings } from "../redux/state";
+import { apiUrl } from "../config/api";
 
 const Listings = () => {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
 
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [error, setError] = useState("");
 
-  const listings = useSelector((state) => state.listings);
+  const listings = useSelector((state) => state.listings) || [];
 
   useEffect(() => {
     const getFeedListings = async () => {
+      setLoading(true);
+      setError("");
+
       try {
         const response = await fetch(
           selectedCategory !== "All"
-            ? `http://localhost:3001/properties?category=${selectedCategory}`
-            : "http://localhost:3001/properties",
+            ? apiUrl(`/properties?category=${selectedCategory}`)
+            : apiUrl("/properties"),
           {
             method: "GET",
           }
         );
 
+        if (!response.ok) {
+          throw new Error(`Server responded with ${response.status}`);
+        }
+
         const data = await response.json();
-        dispatch(setListings({ listings: data }));
-        setLoading(false);
+        dispatch(setListings({ listings: Array.isArray(data) ? data : [] }));
       } catch (err) {
         console.log("Fetch Listings Failed", err.message);
+        dispatch(setListings({ listings: [] }));
+        setError(
+          "Cannot load listings. Start the API server on port 3001 (see DEPLOYMENT.md), then refresh."
+        );
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -54,6 +68,8 @@ const Listings = () => {
 
       {loading ? (
         <Loader />
+      ) : error ? (
+        <p className="listings_error">{error}</p>
       ) : (
         <div className="listings">
           {listings.map(
@@ -70,6 +86,7 @@ const Listings = () => {
               booking=false
             }) => (
               <ListingCard
+                key={_id}
                 listingId={_id}
                 creator={creator}
                 listingPhotoPaths={listingPhotoPaths}
