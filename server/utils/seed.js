@@ -32,6 +32,13 @@ const listing2Photos = [
 ];
 
 const seed = async () => {
+  if (process.env.NODE_ENV === "production" && process.env.ALLOW_SEED !== "true") {
+    console.error(
+      "Refusing to seed in production. Set ALLOW_SEED=true if you really intend to wipe the database."
+    );
+    process.exit(1);
+  }
+
   await connectDB();
   copyAssets();
 
@@ -86,7 +93,7 @@ const seed = async () => {
       "Wake up to ocean views in this spacious beachfront villa with a private patio and modern kitchen.",
     highlight: "Private beach access",
     highlightDesc: "Steps from the sand with outdoor dining and sunset views.",
-    price: 220,
+    price: 18500,
     listingPhotoPaths: listing1Photos,
   });
 
@@ -108,7 +115,7 @@ const seed = async () => {
       "Stay in a cozy countryside cottage surrounded by iconic windmills and tulip fields.",
     highlight: "Countryside escape",
     highlightDesc: "Perfect for a peaceful retreat close to the city.",
-    price: 165,
+    price: 13800,
     listingPhotoPaths: listing2Photos,
   });
 
@@ -130,7 +137,7 @@ const seed = async () => {
       "Luxury desert villa with infinity pool, mountain views, and open-plan living space.",
     highlight: "Resort-style pool",
     highlightDesc: "Heated pool, loungers, and outdoor kitchen for entertaining.",
-    price: 310,
+    price: 25900,
     listingPhotoPaths: listing1Photos.slice(0, 3),
   });
 
@@ -143,7 +150,12 @@ const seed = async () => {
     listingId: beachHouse._id,
     startDate: new Date(Date.now() + 86400000 * 7).toDateString(),
     endDate: new Date(Date.now() + 86400000 * 10).toDateString(),
-    totalPrice: 660,
+    totalPrice: 55500,
+    currency: "INR",
+    paymentStatus: "demo",
+    paymentMethod: "seed",
+    paymentId: "seed_pay_1",
+    orderId: "seed_order_1",
   });
 
   console.log("\n--- Seed complete ---");

@@ -28,3 +28,5 @@ yarn-error.log*
 !/server/.env.example
 /server/public/uploads/*
 !/server/public/uploads/.gitkeep
+/server/data/
+project_description.md

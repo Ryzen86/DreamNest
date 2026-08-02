@@ -15,6 +15,20 @@
   min-height: 60vh;
 }
 
+.list-success {
+  margin: 0 100px 8px;
+  padding: 14px 20px;
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-radius: 10px;
+  text-align: center;
+  font-weight: 600;
+
+  @include sm {
+    margin: 0 24px 8px;
+  }
+}
+
 .list {
   padding: 0 100px 120px;
   display: flex;

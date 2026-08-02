@@ -1,32 +1,39 @@
 const path = require("path");
-const fs = require("fs");
 const multer = require("multer");
 
-const uploadsDir = path.join(__dirname, "..", "public", "uploads");
-const profilesDir = path.join(uploadsDir, "profiles");
-const listingsDir = path.join(uploadsDir, "listings");
+const ALLOWED_MIME = {
+  "image/jpeg": ".jpg",
+  "image/jpg": ".jpg",
+  "image/png": ".png",
+  "image/webp": ".webp",
+  "image/gif": ".gif",
+};
 
-[uploadsDir, profilesDir, listingsDir].forEach((dir) => {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-});
+const ALLOWED_EXT = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif"]);
 
-const storage = (folder) =>
-  multer.diskStorage({
-    destination: (_req, _file, cb) => cb(null, folder),
-    filename: (_req, file, cb) => {
-      const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-      cb(null, `${unique}${path.extname(file.originalname)}`);
-    },
-  });
+const imageFileFilter = (_req, file, cb) => {
+  const ext = path.extname(file.originalname || "").toLowerCase();
+  const mimeOk = Boolean(ALLOWED_MIME[file.mimetype]);
+  const extOk = !ext || ALLOWED_EXT.has(ext);
+
+  if (mimeOk && extOk) {
+    cb(null, true);
+    return;
+  }
+  cb(new Error("Only image files (JPEG, PNG, WebP, GIF) are allowed"));
+};
+
+const storage = multer.memoryStorage();
 
 const profileUpload = multer({
-  storage: storage(profilesDir),
-  limits: { fileSize: 5 * 1024 * 1024 },
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+  fileFilter: imageFileFilter,
 });
 
 const listingUpload = multer({
-  storage: storage(listingsDir),
-  limits: { fileSize: 10 * 1024 * 1024 },
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024, files: 10 },
+  fileFilter: imageFileFilter,
 });
-
 module.exports = { profileUpload, listingUpload };

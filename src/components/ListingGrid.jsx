@@ -6,21 +6,36 @@ const ListingGrid = ({ items, booking = false }) => {
   return (
     <div className="list">
       {items.map((item) => {
-        if (booking && item.listingId) {
-          const { listingId, hostId, startDate, endDate, totalPrice } = item;
+        if (booking) {
+          const listing =
+            item.listingId && typeof item.listingId === "object"
+              ? item.listingId
+              : null;
+
+          if (!listing?._id) {
+            return (
+              <div key={item._id || Math.random()} className="listing-card">
+                <h3>Listing unavailable</h3>
+                <p>
+                  {item.startDate} - {item.endDate}
+                </p>
+              </div>
+            );
+          }
+
           return (
             <ListingCard
-              key={item._id || listingId._id}
-              listingId={listingId._id}
-              creator={hostId}
-              listingPhotoPaths={listingId.listingPhotoPaths}
-              city={listingId.city}
-              province={listingId.province}
-              country={listingId.country}
-              category={listingId.category}
-              startDate={startDate}
-              endDate={endDate}
-              totalPrice={totalPrice}
+              key={item._id || listing._id}
+              listingId={listing._id}
+              creator={item.hostId}
+              listingPhotoPaths={listing.listingPhotoPaths}
+              city={listing.city}
+              province={listing.province}
+              country={listing.country}
+              category={listing.category}
+              startDate={item.startDate}
+              endDate={item.endDate}
+              totalPrice={item.totalPrice}
               booking={true}
             />
           );
@@ -37,6 +52,8 @@ const ListingGrid = ({ items, booking = false }) => {
           type,
           price,
         } = item;
+
+        if (!_id) return null;
 
         return (
           <ListingCard

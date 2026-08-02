@@ -8,31 +8,57 @@ import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
 import EmptyState from "../components/EmptyState";
 import ListingGrid from "../components/ListingGrid";
-import { apiUrl } from "../config/api";
+import { apiUrl, getAuthHeaders } from "../config/api";
+import { useLocation, useParams } from "react-router-dom";
 
 const TripList = () => {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const user = useSelector((state) => state.user);
+  const token = useSelector((state) => state.token);
   const userId = user?._id;
   const tripList = user?.tripList || [];
-
+  const location = useLocation();
+  const { userId: routeUserId } = useParams();
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (!userId) {
+    if (location.state?.message) {
+      setSuccessMessage(location.state.message);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+  useEffect(() => {
+    if (!userId || !token) {
+      setLoading(false);
+      return;
+    }
+
+    if (routeUserId && routeUserId !== userId) {
+      setError("You can only view your own trips.");
       setLoading(false);
       return;
     }
 
     const getTripList = async () => {
       try {
+        setError("");
         const response = await fetch(apiUrl(`/users/${userId}/trips`), {
           method: "GET",
+          headers: getAuthHeaders(token),
         });
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          setError(data.message || "Failed to load trips.");
+          dispatch(setTripList([]));
+          return;
+        }
         dispatch(setTripList(Array.isArray(data) ? data : []));
       } catch (err) {
         console.log("Fetch Trip List failed!", err.message);
+        setError("Cannot reach the API server.");
         dispatch(setTripList([]));
       } finally {
         setLoading(false);
@@ -40,7 +66,7 @@ const TripList = () => {
     };
 
     getTripList();
-  }, [userId, dispatch]);
+  }, [userId, token, routeUserId, dispatch]);
 
   if (!userId) {
     return (
@@ -79,10 +105,12 @@ const TripList = () => {
             : "Your next getaway starts here"
         }
       />
+      {successMessage && <p className="list-success">{successMessage}</p>}
+      {error && <p className="list-success" style={{ color: "#c0392b" }}>{error}</p>}
       <div className="list-page">
-        {tripList.length > 0 ? (
+        {!error && tripList.length > 0 ? (
           <ListingGrid items={tripList} booking />
-        ) : (
+        ) : !error ? (
           <EmptyState
             image="/assets/desert_cat.webp"
             title="No trips booked yet"
@@ -90,7 +118,7 @@ const TripList = () => {
             actionLabel="Browse listings"
             actionTo="/"
           />
-        )}
+        ) : null}
       </div>
       <Footer />
     </>

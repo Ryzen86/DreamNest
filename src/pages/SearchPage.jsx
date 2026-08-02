@@ -21,10 +21,15 @@ const SearchPage = () => {
   useEffect(() => {
     const getSearchListings = async () => {
       try {
-        const response = await fetch(apiUrl(`/properties/search/${search}`), {
-          method: "GET",
-        });
-        const data = await response.json();
+        const response = await fetch(
+          apiUrl(`/properties/search/${encodeURIComponent(search || "")}`),
+          { method: "GET" }
+        );
+        const data = await response.json().catch(() => []);
+        if (!response.ok) {
+          dispatch(setListings({ listings: [] }));
+          return;
+        }
         dispatch(setListings({ listings: Array.isArray(data) ? data : [] }));
       } catch (err) {
         console.log("Fetch Search List failed!", err.message);

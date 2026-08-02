@@ -54,8 +54,24 @@ App: http://localhost:3000
 - Property listings with categories, search, and filters
 - Photo uploads (profile + listing images)
 - Wishlist
+- **INR pricing** across the platform (₹)
+- **Payment page** with Razorpay (UPI, cards, net banking) or demo gateway locally
 - Booking / trips (guest) and reservations (host)
 - Roles: **user**, **host** (auto-assigned after first listing), **admin**
+
+## Payments (INR · Razorpay)
+
+See **[RAZORPAY_SETUP.md](./RAZORPAY_SETUP.md)** for full setup.
+
+1. Book a stay → **Proceed to Payment**
+2. **With Razorpay keys** in `server/.env`: UPI, cards, net banking
+3. **Without keys**: demo gateway for local testing
+
+```env
+RAZORPAY_KEY_ID=rzp_test_...
+RAZORPAY_KEY_SECRET=...
+PAYMENT_DEMO_MODE=false
+```
 
 ## Project structure
 

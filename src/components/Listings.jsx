@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { categories } from "../data";
 import "../styles/Listings.scss";
 import ListingCard from "./ListingCard";
@@ -16,6 +17,7 @@ const Listings = () => {
   const [error, setError] = useState("");
 
   const listings = useSelector((state) => state.listings) || [];
+  const location = useLocation();
 
   useEffect(() => {
     const getFeedListings = async () => {
@@ -25,7 +27,9 @@ const Listings = () => {
       try {
         const response = await fetch(
           selectedCategory !== "All"
-            ? apiUrl(`/properties?category=${selectedCategory}`)
+            ? apiUrl(
+                `/properties?category=${encodeURIComponent(selectedCategory)}`
+              )
             : apiUrl("/properties"),
           {
             method: "GET",
@@ -42,7 +46,7 @@ const Listings = () => {
         console.log("Fetch Listings Failed", err.message);
         dispatch(setListings({ listings: [] }));
         setError(
-          "Cannot load listings. Start the API server on port 3001 (see DEPLOYMENT.md), then refresh."
+          "Cannot load listings. Start the API server on port 3002, then refresh."
         );
       } finally {
         setLoading(false);
@@ -50,7 +54,7 @@ const Listings = () => {
     };
 
     getFeedListings();
-  }, [selectedCategory, dispatch]);
+  }, [selectedCategory, dispatch, location.key]);
 
   return (
     <>

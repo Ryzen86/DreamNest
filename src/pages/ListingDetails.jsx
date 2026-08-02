@@ -9,12 +9,20 @@ import { DateRange } from "react-date-range";
 import Loader from "../components/Loader";
 import Navbar from "../components/Navbar";
 import { useSelector } from "react-redux";
-import Footer from "../components/Footer"
+import Footer from "../components/Footer";
 import EmptyState from "../components/EmptyState";
 import { apiUrl, assetUrl } from "../config/api";
+import { formatINR } from "../utils/currency";
+
+const tomorrow = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d;
+};
 
 const ListingDetails = () => {
   const [loading, setLoading] = useState(true);
+  const [bookingError, setBookingError] = useState("");
 
   const { listingId } = useParams();
   const [listing, setListing] = useState(null);
@@ -45,56 +53,71 @@ const ListingDetails = () => {
     getListingDetails();
   }, [listingId]);
 
-
-  /* BOOKING CALENDAR */
   const [dateRange, setDateRange] = useState([
     {
       startDate: new Date(),
-      endDate: new Date(),
+      endDate: tomorrow(),
       key: "selection",
     },
   ]);
 
   const handleSelect = (ranges) => {
-    // Update the selected date range when user makes a selection
     setDateRange([ranges.selection]);
   };
 
   const start = new Date(dateRange[0].startDate);
   const end = new Date(dateRange[0].endDate);
-  const dayCount = Math.round(end - start) / (1000 * 60 * 60 * 24); // Calculate the difference in day unit
+  const dayCount = Math.round((end - start) / (1000 * 60 * 60 * 24));
 
-  /* SUBMIT BOOKING */
-  const customerId = useSelector((state) => state?.user?._id)
+  const customerId = useSelector((state) => state?.user?._id);
+  const navigate = useNavigate();
 
-  const navigate = useNavigate()
+  const buildBookingDraft = () => ({
+    listingId,
+    hostId: listing?.creator?._id,
+    startDate: dateRange[0].startDate.toDateString(),
+    endDate: dateRange[0].endDate.toDateString(),
+    totalPrice: listing.price * dayCount,
+    pricePerNight: listing.price,
+    nightCount: dayCount,
+    listingTitle: listing.title,
+    city: listing.city,
+    province: listing.province,
+  });
 
-  const handleSubmit = async () => {
-    try {
-      const bookingForm = {
-        customerId,
-        listingId,
-        hostId: listing.creator._id,
-        startDate: dateRange[0].startDate.toDateString(),
-        endDate: dateRange[0].endDate.toDateString(),
-        totalPrice: listing.price * dayCount,
-      }
+  const handleProceedToPayment = () => {
+    setBookingError("");
 
-      const response = await fetch(apiUrl("/bookings/create"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(bookingForm)
-      })
-
-      if (response.ok) {
-        navigate(`/${customerId}/trips`)
-      }
-    } catch (err) {
-      console.log("Submit Booking Failed.", err.message)
+    if (!listing?.creator?._id) {
+      setBookingError("Host information is unavailable for this listing.");
+      return;
     }
-  }
+
+    if (dayCount < 1) {
+      setBookingError("Please select at least one night (check-out after check-in).");
+      return;
+    }
+
+    if (customerId && String(customerId) === String(listing.creator._id)) {
+      setBookingError("You cannot book your own listing.");
+      return;
+    }
+
+    const booking = buildBookingDraft();
+
+    try {
+      sessionStorage.setItem("dreamnest_booking_draft", JSON.stringify(booking));
+    } catch {
+      /* ignore quota errors */
+    }
+
+    if (!customerId) {
+      navigate("/login", { state: { from: "/payment", booking } });
+      return;
+    }
+
+    navigate("/payment", { state: { booking } });
+  };
 
   if (loading) return <Loader />;
 
@@ -115,6 +138,9 @@ const ListingDetails = () => {
       </>
     );
   }
+
+  const hostFirst = listing.creator?.firstName || "Host";
+  const hostLast = listing.creator?.lastName || "";
 
   return (
     <>
@@ -148,11 +174,11 @@ const ListingDetails = () => {
 
         <div className="profile">
           <img
-            src={assetUrl(listing.creator.profileImagePath)}
+            src={assetUrl(listing.creator?.profileImagePath)}
             alt="Host profile"
           />
           <h3>
-            Hosted by {listing.creator.firstName} {listing.creator.lastName}
+            Hosted by {hostFirst} {hostLast}
           </h3>
         </div>
         <hr />
@@ -193,23 +219,31 @@ const ListingDetails = () => {
           <div>
             <h2>How long do you want to stay?</h2>
             <div className="date-range-calendar">
-              <DateRange ranges={dateRange} onChange={handleSelect} />
-              {dayCount > 1 ? (
-                <h2>
-                  ${listing.price} x {dayCount} nights
-                </h2>
-              ) : (
-                <h2>
-                  ${listing.price} x {dayCount} night
-                </h2>
-              )}
-
-              <h2>Total price: ${listing.price * dayCount}</h2>
+              <DateRange ranges={dateRange} onChange={handleSelect} minDate={new Date()} />
+              <h2>
+                {formatINR(listing.price)} x {Math.max(dayCount, 0)}{" "}
+                {dayCount === 1 ? "night" : "nights"}
+              </h2>
+              <h2>
+                Total:{" "}
+                {dayCount >= 1
+                  ? formatINR(listing.price * dayCount)
+                  : formatINR(0)}
+              </h2>
               <p>Start Date: {dateRange[0].startDate.toDateString()}</p>
               <p>End Date: {dateRange[0].endDate.toDateString()}</p>
 
-              <button className="button" type="submit" onClick={handleSubmit}>
-                BOOKING
+              {bookingError && (
+                <p className="booking-error">{bookingError}</p>
+              )}
+
+              <button
+                className="button"
+                type="button"
+                onClick={handleProceedToPayment}
+                disabled={dayCount < 1}
+              >
+                PROCEED TO PAYMENT
               </button>
             </div>
           </div>

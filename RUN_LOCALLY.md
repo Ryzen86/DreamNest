@@ -39,6 +39,19 @@ App runs at http://localhost:3000 — wait for **Compiled successfully** before 
 | Black / blank screen | Wait for compile; hard refresh (Ctrl+Shift+R) |
 | Login does nothing | Start backend on port 3001 |
 
+## Razorpay (live payments)
+
+1. Get test keys from [dashboard.razorpay.com](https://dashboard.razorpay.com/app/keys)
+2. Add to `server/.env`:
+   ```
+   RAZORPAY_KEY_ID=rzp_test_...
+   RAZORPAY_KEY_SECRET=...
+   PAYMENT_DEMO_MODE=false
+   ```
+3. Restart API — terminal should show `Razorpay: enabled (test mode)`
+
+Full guide: **RAZORPAY_SETUP.md**
+
 ### Port 3001 already in use
 
 ```powershell

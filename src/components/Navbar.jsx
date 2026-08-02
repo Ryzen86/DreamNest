@@ -8,51 +8,51 @@ import { Link, useNavigate } from "react-router-dom";
 import { setLogout } from "../redux/state";
 import { assetUrl } from "../config/api";
 
-
 const Navbar = () => {
   const [dropdownMenu, setDropdownMenu] = useState(false);
-
   const user = useSelector((state) => state.user);
-
   const dispatch = useDispatch();
+  const [search, setSearch] = useState("");
+  const navigate = useNavigate();
 
-  const [search, setSearch] = useState("")
-
-  const navigate = useNavigate()
+  const handleSearch = (e) => {
+    e?.preventDefault?.();
+    const term = search.trim();
+    if (!term) return;
+    navigate(`/properties/search/${encodeURIComponent(term)}`);
+  };
 
   return (
     <div className="navbar">
-      <a href="/">
+      <Link to="/">
         <img src="/assets/logo.png" alt="logo" />
-      </a>
+      </Link>
 
-      <div className="navbar_search">
+      <form className="navbar_search" onSubmit={handleSearch}>
         <input
           type="text"
           placeholder="Search ..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <IconButton disabled={search === ""}>
-          <Search
-            sx={{ color: variables.pinkred }}
-            onClick={() => {navigate(`/properties/search/${search}`)}}
-          />
+        <IconButton type="submit" disabled={!search.trim()}>
+          <Search sx={{ color: variables.pinkred }} />
         </IconButton>
-      </div>
+      </form>
 
       <div className="navbar_right">
         {user ? (
-          <a href="/create-listing" className="host">
+          <Link to="/create-listing" className="host">
             Become A Host
-          </a>
+          </Link>
         ) : (
-          <a href="/login" className="host">
+          <Link to="/login" state={{ from: "/create-listing" }} className="host">
             Become A Host
-          </a>
+          </Link>
         )}
 
         <button
+          type="button"
           className="navbar_right_account"
           onClick={() => setDropdownMenu(!dropdownMenu)}
         >

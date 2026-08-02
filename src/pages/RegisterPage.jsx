@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom";
 import "../styles/Register.scss";
 import { apiUrl } from "../config/api";
 
@@ -12,54 +12,80 @@ const RegisterPage = () => {
     confirmPassword: "",
     profileImage: null,
   });
+  const [previewUrl, setPreviewUrl] = useState("");
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     setFormData({
       ...formData,
-      [name]: value,
       [name]: name === "profileImage" ? files[0] : value,
     });
   };
 
-  const [passwordMatch, setPasswordMatch] = useState(true)
+  const [passwordMatch, setPasswordMatch] = useState(true);
 
   useEffect(() => {
-    setPasswordMatch(formData.password === formData.confirmPassword || formData.confirmPassword === "")
-  }, [formData.password, formData.confirmPassword])
+    setPasswordMatch(
+      formData.password === formData.confirmPassword ||
+        formData.confirmPassword === ""
+    );
+  }, [formData.password, formData.confirmPassword]);
 
-  const navigate = useNavigate()
-  const [error, setError] = useState("")
+  useEffect(() => {
+    if (!formData.profileImage) {
+      setPreviewUrl("");
+      return;
+    }
+    const url = URL.createObjectURL(formData.profileImage);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [formData.profileImage]);
+
+  const navigate = useNavigate();
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError("")
+    e.preventDefault();
+    setError("");
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
 
     try {
-      const register_form = new FormData()
-
-      for (var key in formData) {
-        register_form.append(key, formData[key])
+      const register_form = new FormData();
+      register_form.append("firstName", formData.firstName);
+      register_form.append("lastName", formData.lastName);
+      register_form.append("email", formData.email);
+      register_form.append("password", formData.password);
+      if (formData.profileImage) {
+        register_form.append("profileImage", formData.profileImage);
       }
 
       const response = await fetch(apiUrl("/auth/register"), {
         method: "POST",
-        body: register_form
-      })
+        body: register_form,
+      });
 
       if (response.ok) {
-        navigate("/login")
+        navigate("/login", { state: { registered: true } });
       } else {
-        const errBody = await response.json().catch(() => ({}))
-        setError(errBody.message || "Registration failed.")
+        const errBody = await response.json().catch(() => ({}));
+        setError(errBody.message || "Registration failed.");
       }
     } catch (err) {
-      console.log("Registration failed", err.message)
+      console.log("Registration failed", err.message);
       setError(
-        "Cannot reach the API server. Deploy the backend and set REACT_APP_API_URL in Vercel."
-      )
+        "Cannot reach the API server. Deploy the backend and set REACT_APP_API_URL."
+      );
     }
-  }
+  };
 
   return (
     <div className="register">
@@ -113,26 +139,27 @@ const RegisterPage = () => {
             id="image"
             type="file"
             name="profileImage"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/gif"
             style={{ display: "none" }}
             onChange={handleChange}
-            required
           />
           <label htmlFor="image">
             <img src="/assets/addImage.png" alt="Add profile" />
-            <p>Upload Your Photo</p>
+            <p>Upload Your Photo (optional)</p>
           </label>
 
-          {formData.profileImage && (
+          {previewUrl && (
             <img
-              src={URL.createObjectURL(formData.profileImage)}
+              src={previewUrl}
               alt="Profile preview"
               style={{ maxWidth: "80px" }}
             />
           )}
-          <button type="submit" disabled={!passwordMatch}>REGISTER</button>
+          <button type="submit" disabled={!passwordMatch}>
+            REGISTER
+          </button>
         </form>
-        <a href="/login">Already have an account? Log In Here</a>
+        <Link to="/login">Already have an account? Log In Here</Link>
       </div>
     </div>
   );

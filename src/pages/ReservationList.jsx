@@ -8,31 +8,48 @@ import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
 import EmptyState from "../components/EmptyState";
 import ListingGrid from "../components/ListingGrid";
-import { apiUrl } from "../config/api";
+import { apiUrl, getAuthHeaders } from "../config/api";
+import { useParams } from "react-router-dom";
 
 const ReservationList = () => {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const user = useSelector((state) => state.user);
+  const token = useSelector((state) => state.token);
   const userId = user?._id;
   const reservationList = user?.reservationList || [];
-
+  const { userId: routeUserId } = useParams();
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (!userId) {
+    if (!userId || !token) {
+      setLoading(false);
+      return;
+    }
+
+    if (routeUserId && routeUserId !== userId) {
+      setError("You can only view your own reservations.");
       setLoading(false);
       return;
     }
 
     const getReservationList = async () => {
       try {
+        setError("");
         const response = await fetch(apiUrl(`/users/${userId}/reservations`), {
           method: "GET",
+          headers: getAuthHeaders(token),
         });
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          setError(data.message || "Failed to load reservations.");
+          dispatch(setReservationList([]));
+          return;
+        }
         dispatch(setReservationList(Array.isArray(data) ? data : []));
       } catch (err) {
         console.log("Fetch Reservation List failed!", err.message);
+        setError("Cannot reach the API server.");
         dispatch(setReservationList([]));
       } finally {
         setLoading(false);
@@ -40,7 +57,7 @@ const ReservationList = () => {
     };
 
     getReservationList();
-  }, [userId, dispatch]);
+  }, [userId, token, routeUserId, dispatch]);
 
   if (!userId) {
     return (
@@ -79,10 +96,11 @@ const ReservationList = () => {
             : "Guests who book your listings appear here"
         }
       />
+      {error && <p className="list-success" style={{ color: "#c0392b" }}>{error}</p>}
       <div className="list-page">
-        {reservationList.length > 0 ? (
+        {!error && reservationList.length > 0 ? (
           <ListingGrid items={reservationList} booking />
-        ) : (
+        ) : !error ? (
           <EmptyState
             image="/assets/arctic_cat.webp"
             title="No reservations yet"
@@ -90,7 +108,7 @@ const ReservationList = () => {
             actionLabel="Create a listing"
             actionTo="/create-listing"
           />
-        )}
+        ) : null}
       </div>
       <Footer />
     </>

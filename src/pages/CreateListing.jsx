@@ -6,13 +6,19 @@ import { RemoveCircleOutline, AddCircleOutline } from "@mui/icons-material";
 import variables from "../styles/variables.scss";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import { IoIosImages } from "react-icons/io";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BiTrash } from "react-icons/bi";
-import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer"
 import PageHero from "../components/PageHero";
-import { apiUrl } from "../config/api";
+import { apiUrl, getAuthHeaders } from "../config/api";
+import {
+  setListings,
+  setPropertyList,
+  setUserRole,
+  prependListing,
+} from "../redux/state";
 
 const CreateListing = () => {
   const [category, setCategory] = useState("");
@@ -29,10 +35,10 @@ const CreateListing = () => {
 
   const handleChangeLocation = (e) => {
     const { name, value } = e.target;
-    setFormLocation({
-      ...formLocation,
+    setFormLocation((prev) => ({
+      ...prev,
       [name]: value,
-    });
+    }));
   };
 
   /* BASIC COUNTS */
@@ -56,10 +62,20 @@ const CreateListing = () => {
 
   /* UPLOAD, DRAG & DROP, REMOVE PHOTOS */
   const [photos, setPhotos] = useState([]);
+  const [photoUrls, setPhotoUrls] = useState([]);
+
+  useEffect(() => {
+    const urls = photos.map((file) => URL.createObjectURL(file));
+    setPhotoUrls(urls);
+    return () => {
+      urls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [photos]);
 
   const handleUploadPhotos = (e) => {
-    const newPhotos = e.target.files;
+    const newPhotos = Array.from(e.target.files || []);
     setPhotos((prevPhotos) => [...prevPhotos, ...newPhotos]);
+    e.target.value = "";
   };
 
   const handleDragPhoto = (result) => {
@@ -84,26 +100,35 @@ const CreateListing = () => {
     description: "",
     highlight: "",
     highlightDesc: "",
-    price: 0,
+    price: "",
   });
 
   const handleChangeDescription = (e) => {
     const { name, value } = e.target;
-    setFormDescription({
-      ...formDescription,
+    setFormDescription((prev) => ({
+      ...prev,
       [name]: value,
-    });
+    }));
   };
 
+  const [submitError, setSubmitError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
   const creatorId = useSelector((state) => state.user?._id);
+  const token = useSelector((state) => state.token);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  if (!creatorId) {
+  if (!creatorId || !token) {
     return (
       <>
         <Navbar />
         <p style={{ padding: 40, textAlign: "center" }}>
-          Please <a href="/login">log in</a> to create a listing.
+          Please{" "}
+          <Link to="/login" state={{ from: "/create-listing" }}>
+            log in
+          </Link>{" "}
+          to create a listing.
         </p>
         <Footer />
       </>
@@ -112,11 +137,29 @@ const CreateListing = () => {
 
   const handlePost = async (e) => {
     e.preventDefault();
+    setSubmitError("");
+
+    if (!category || category === "All") {
+      setSubmitError("Please select a category (not “All”).");
+      return;
+    }
+    if (!type) {
+      setSubmitError("Please select a property type.");
+      return;
+    }
+    if (photos.length < 1) {
+      setSubmitError("Please upload at least one photo of your place.");
+      return;
+    }
+    if (!formDescription.price || Number(formDescription.price) <= 0) {
+      setSubmitError("Please enter a nightly price greater than ₹0.");
+      return;
+    }
+
+    setSubmitting(true);
 
     try {
-      /* Create a new FormData onject to handle file uploads */
       const listingForm = new FormData();
-      listingForm.append("creator", creatorId);
       listingForm.append("category", category);
       listingForm.append("type", type);
       listingForm.append("streetAddress", formLocation.streetAddress);
@@ -124,33 +167,62 @@ const CreateListing = () => {
       listingForm.append("city", formLocation.city);
       listingForm.append("province", formLocation.province);
       listingForm.append("country", formLocation.country);
-      listingForm.append("guestCount", guestCount);
-      listingForm.append("bedroomCount", bedroomCount);
-      listingForm.append("bedCount", bedCount);
-      listingForm.append("bathroomCount", bathroomCount);
-      listingForm.append("amenities", amenities);
+      listingForm.append("guestCount", String(guestCount));
+      listingForm.append("bedroomCount", String(bedroomCount));
+      listingForm.append("bedCount", String(bedCount));
+      listingForm.append("bathroomCount", String(bathroomCount));
+      listingForm.append("amenities", JSON.stringify(amenities));
       listingForm.append("title", formDescription.title);
       listingForm.append("description", formDescription.description);
       listingForm.append("highlight", formDescription.highlight);
       listingForm.append("highlightDesc", formDescription.highlightDesc);
-      listingForm.append("price", formDescription.price);
+      listingForm.append("price", String(formDescription.price));
 
-      /* Append each selected photos to the FormData object */
       photos.forEach((photo) => {
         listingForm.append("listingPhotos", photo);
       });
 
-      /* Send a POST request to server */
       const response = await fetch(apiUrl("/properties/create"), {
         method: "POST",
+        headers: getAuthHeaders(token),
         body: listingForm,
       });
 
-      if (response.ok) {
-        navigate("/");
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setSubmitError(data.message || "Failed to create listing. Please try again.");
+        return;
       }
+
+      dispatch(prependListing(data));
+      dispatch(setUserRole("host"));
+
+      const [listingsRes, propertiesRes] = await Promise.all([
+        fetch(apiUrl("/properties")),
+        fetch(apiUrl(`/users/${creatorId}/properties`)),
+      ]);
+
+      if (listingsRes.ok) {
+        const listings = await listingsRes.json();
+        dispatch(setListings({ listings: Array.isArray(listings) ? listings : [] }));
+      }
+
+      if (propertiesRes.ok) {
+        const properties = await propertiesRes.json();
+        dispatch(setPropertyList(Array.isArray(properties) ? properties : []));
+      }
+
+      navigate(`/${creatorId}/properties`, {
+        state: { message: "Your listing was published successfully!" },
+      });
     } catch (err) {
       console.log("Publish Listing failed", err.message);
+      setSubmitError(
+        "Cannot reach the server. Make sure the API is running on port 3002."
+      );
+    } finally {
+      setSubmitting(false);
     }
   };
   return (
@@ -169,7 +241,9 @@ const CreateListing = () => {
             <hr />
             <h3>Which of these categories best describes your place?</h3>
             <div className="category-list">
-              {categories?.map((item, index) => (
+              {categories
+                ?.filter((item) => item.label !== "All")
+                .map((item, index) => (
                 <div
                   className={`category ${
                     category === item.label ? "selected" : ""
@@ -224,7 +298,6 @@ const CreateListing = () => {
                   name="aptSuite"
                   value={formLocation.aptSuite}
                   onChange={handleChangeLocation}
-                  required
                 />
               </div>
               <div className="location">
@@ -397,7 +470,7 @@ const CreateListing = () => {
               ))}
             </div>
 
-            <h3>Add some photos of your place</h3>
+            <h3>Add some photos of your place <span className="required-note">(required)</span></h3>
             <DragDropContext onDragEnd={handleDragPhoto}>
               <Droppable droppableId="photos" direction="horizontal">
                 {(provided) => (
@@ -412,7 +485,7 @@ const CreateListing = () => {
                           id="image"
                           type="file"
                           style={{ display: "none" }}
-                          accept="image/*"
+                          accept="image/jpeg,image/png,image/webp,image/gif"
                           onChange={handleUploadPhotos}
                           multiple
                         />
@@ -442,7 +515,7 @@ const CreateListing = () => {
                                   {...provided.dragHandleProps}
                                 >
                                   <img
-                                    src={URL.createObjectURL(photo)}
+                                    src={photoUrls[index]}
                                     alt="place"
                                   />
                                   <button
@@ -460,7 +533,7 @@ const CreateListing = () => {
                           id="image"
                           type="file"
                           style={{ display: "none" }}
-                          accept="image/*"
+                          accept="image/jpeg,image/png,image/webp,image/gif"
                           onChange={handleUploadPhotos}
                           multiple
                         />
@@ -515,8 +588,8 @@ const CreateListing = () => {
                 onChange={handleChangeDescription}
                 required
               />
-              <p>Now, set your PRICE</p>
-              <span>$</span>
+              <p>Now, set your PRICE (INR per night)</p>
+              <span>₹</span>
               <input
                 type="number"
                 placeholder="100"
@@ -529,8 +602,12 @@ const CreateListing = () => {
             </div>
           </div>
 
-          <button className="submit_btn" type="submit">
-            CREATE YOUR LISTING
+          {submitError && (
+            <p className="create-listing_error">{submitError}</p>
+          )}
+
+          <button className="submit_btn" type="submit" disabled={submitting}>
+            {submitting ? "PUBLISHING..." : "CREATE YOUR LISTING"}
           </button>
         </form>
       </div>
